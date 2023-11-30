@@ -14,7 +14,7 @@ const userRouter = express.Router()
 
 // Route to create a new user
 userRouter.post(
-    '/users/register',
+    '/users/signup',
     [
         body('username')
             .isString()
@@ -103,8 +103,8 @@ userRouter.post('/users/login', async (req, res, next) => {
 // Secret Route
 userRouter.get(
     '/users/secret',
-    authenticateUser,
     limiter,
+    authenticateUser,
     async (req, res, next) => {
         res.status(200).json({
             message: 'Secure endpoint accessed successfully',
