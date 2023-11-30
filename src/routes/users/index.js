@@ -30,19 +30,19 @@ userRouter.post(
             .withMessage('Password must be at least 6 characters'),
         handleValidationErrors,
     ],
-    async (res, req, next) => {
+    async (req, res, next) => {
         const { username, email, password } = req.body
 
         try {
-            const existingUser = await prisma.user.findUnique({
-                where: { username },
+            const existingUser = await prisma.user.findFirst({
+                where: {
+                    OR: [{ username }, { email }],
+                },
             })
 
             if (existingUser) {
                 return next(
-                    new alreadyExistsError({
-                        message: 'Username is already exist',
-                    })
+                    new alreadyExistsError('Username or email is already exist')
                 )
             }
 
@@ -68,31 +68,24 @@ userRouter.post(
 
 // Route for user login
 userRouter.post('/users/login', async (req, res, next) => {
-    const { username, password } = req.body
+    const { username, email, password } = req.body
 
     try {
         const user = await prisma.user.findUnique({
             where: {
                 username,
+                email,
             },
         })
 
         if (!user) {
-            return next(
-                new badRequestError({
-                    message: 'Invalid username or password',
-                })
-            )
+            return next(new badRequestError('Invalid credentials'))
         }
 
-        const passwordMatch = await bcrypt.compare(user.password, password)
+        const passwordMatch = await bcrypt.compare(password, user.password)
 
         if (!passwordMatch) {
-            return next(
-                new badRequestError({
-                    message: 'Invalid username or password',
-                })
-            )
+            return next(new badRequestError('Invalid credentials'))
         }
         const token = jwt.sign(
             { username: user.username, email: user.email },

@@ -1,6 +1,4 @@
 class customError extends Error {
-    status
-
     constructor(message) {
         super()
 
