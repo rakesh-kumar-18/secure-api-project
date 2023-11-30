@@ -7,6 +7,8 @@ import { body } from 'express-validator'
 import { alreadyExistsError } from '../../errors/alreadyExistError.js'
 import { badRequestError } from '../../errors/badRequestError.js'
 import { handleValidationErrors } from '../../middlewares/inputValidation.js'
+import { authenticateUser } from '../../middlewares/authenticateUser.js'
+import limiter from '../../middlewares/rateLimit.js'
 
 const userRouter = express.Router()
 
@@ -97,5 +99,17 @@ userRouter.post('/users/login', async (req, res, next) => {
         next(error)
     }
 })
+
+// Secret Route
+userRouter.get(
+    '/users/secret',
+    authenticateUser,
+    limiter,
+    async (req, res, next) => {
+        res.status(200).json({
+            message: 'Secure endpoint accessed successfully',
+        })
+    }
+)
 
 export default userRouter
